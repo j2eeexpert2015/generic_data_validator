@@ -29,8 +29,8 @@ def log_error(custom_message, exception=None):
 
 # Read database configurations from CSV files
 try:
-    source_config = pd.read_csv("source_database_config.csv").iloc[0]
-    target_config = pd.read_csv("target_database_config.csv").iloc[0]
+    source_config = pd.read_csv("config/source_database_config.csv").iloc[0]
+    target_config = pd.read_csv("config/target_database_config.csv").iloc[0]
 except FileNotFoundError as e:
     log_error(f"Configuration file not found: {e.filename}")
     sys.exit(1)
@@ -70,7 +70,7 @@ except Exception as e:
 
 # Read input CSV file
 try:
-    input_csv = "tables_to_compare.csv"
+    input_csv = "config/tables_to_compare.csv"
     table_pairs = pd.read_csv(input_csv)
 except FileNotFoundError as e:
     log_error(f"Input file not found: {e.filename}")
