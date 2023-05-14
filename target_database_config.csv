@@ -1,0 +1,2 @@
+type,project_id,credentials_path
+bigquery,poised-shuttle-384406,D:/All_GCP/ad_bq_test_sa.json

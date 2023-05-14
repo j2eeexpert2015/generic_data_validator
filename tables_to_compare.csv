@@ -1,0 +1,2 @@
+source_table_name,target_table_name,column_name_check,column_name_check_case_sensitive,row_count_check,data_type_check,null_count_check
+employee,dataset1.employee,True,True,True,True,True
