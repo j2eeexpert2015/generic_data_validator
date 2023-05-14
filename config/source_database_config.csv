@@ -1,2 +1,2 @@
 type,host,user,password,database
-mysql,localhost,root,Habijabi@6876,sys
+mysql,localhost,root,,sys
