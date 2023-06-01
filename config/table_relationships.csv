@@ -1,0 +1,3 @@
+Parent_Table,Child_Table,Primary_Key,Foreign_Key
+orders,order_items,order_id,order_id
+products,order_items,product_id,product_id

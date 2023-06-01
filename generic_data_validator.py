@@ -2,6 +2,7 @@ import os
 import sys
 import mysql.connector
 import pandas as pd
+import csv
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import cx_Oracle
@@ -94,7 +95,36 @@ def get_target_column_data(table_name):
         log_error(f"Error fetching target column data for table '{table_name}': {e}")
         raise
 
+def validate_relationship(parent_table, child_table, primary_key, foreign_key):
+    dataset_id = target_client.dataset_id
+    check_query = f"""
+        SELECT COUNT(*)
+        FROM `{dataset_id}.{child_table}`
+        WHERE {foreign_key} NOT IN (SELECT {primary_key} FROM `{dataset_id}.{parent_table}`)
+    """
+    check_query_job = target_client.query(check_query)
+    # Get the result
+    result = list(check_query_job.result())[0][0]
+    if result > 0:
+        return [parent_table, child_table, primary_key, foreign_key, result]
+    else:
+        return None
 
+
+def validate_table_relationships(relationship_csv, output_csv):
+    with open(relationship_csv, 'r') as csvfile:
+        relationship_reader = csv.DictReader(csvfile)
+        for row in relationship_reader:
+            validation_result = validate_relationship(row['Parent_Table'], row['Child_Table'], row['Primary_Key'],
+                                                      row['Foreign_Key'])
+
+            if validation_result:
+                with open(output_csv, 'a', newline='') as result_file:
+                    csv_writer = csv.writer(result_file)
+                    csv_writer.writerow(['Table_Relationship', 'Key_Validation'] + validation_result)
+
+# Call the function with your CSV file paths
+#validate_table_relationships('table_relationships.csv', 'validation_results.csv')
 # Function to validate source and target tables based on input configurations
 def validate_tables(row):
     # Extract table pair and validation configurations from the row
