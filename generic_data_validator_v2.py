@@ -116,14 +116,15 @@ def validate_relationship(parent_table, child_table, parent_dataset, child_datas
         return None
 
 
-def validate_table_relationships(relationship_csv, output_csv):
+def validate_table_relationships(relationship_csv, output_csv,target_client):
     with open(relationship_csv, 'r') as csvfile:
         relationship_reader = csv.DictReader(csvfile)
         for row in relationship_reader:
             validation_result = validate_relationship(row['Parent_Table'], row['Child_Table'],row['Parent_Dataset'], row['Child_Dataset'], row['Primary_Key'],
-                                                      row['Foreign_Key'])
+                                                      row['Foreign_Key'],target_client)
 
             if validation_result:
+                logger.info("Generating output to file name: %s", output_csv.lower())
                 with open(output_csv, 'a', newline='') as result_file:
                     csv_writer = csv.writer(result_file)
                     csv_writer.writerow(['Table_Relationship', 'Key_Validation'] + validation_result)
@@ -223,7 +224,9 @@ def validate_tables(row,source_cursor,target_client):
             })
 
     # Save validation results to a CSV file
+    logger.info("Generating output to file name:")
     output_filename = f"validation_results_{source_table_name}_to_{target_table_name}.csv"
+    logger.info("Generating output to file name: %s",output_filename)
     output_df = pd.DataFrame(results)
     output_df.to_csv(output_filename, index=False)
 def main():
@@ -241,6 +244,7 @@ def main():
             validate_tables(row,source_cursor,target_client)
         except Exception as e:
             log_error(f"Error validating tables: {e}")
+    validate_table_relationships('config/table_relationships.csv', 'validation_results.csv',target_client)
 
 if __name__ == "__main__":
     main()
