@@ -1,2 +1,0 @@
-Parent_Table,Child_Table,Parent_Dataset,Child_Dataset,Primary_Key,Foreign_Key
-orders,order_items,dataset1,dataset1,order_id,order_id
