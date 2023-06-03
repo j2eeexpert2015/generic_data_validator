@@ -100,37 +100,52 @@ def get_target_column_data(table_name,target_client):
         log_error(f"Error fetching target column data for table '{table_name}': {e}")
         raise
 
-def validate_relationship(parent_table, child_table, parent_dataset, child_dataset,primary_key, foreign_key,target_client):
-    dataset_id = 'dataset'
-    check_query = f"""
-        SELECT COUNT(*)
-        FROM `{child_dataset}.{child_table}`
-        WHERE {foreign_key} NOT IN (SELECT {primary_key} FROM `{parent_dataset}.{parent_table}`)
-    """
-    check_query_job = target_client.query(check_query)
-    # Get the result
-    result = list(check_query_job.result())[0][0]
-    if result > 0:
-        return [parent_table, child_table, primary_key, foreign_key, result]
-    else:
-        return None
+def load_csv_data(filepath):
+    return pd.read_csv(filepath)
+
+def is_primary_key_old(client, dataset, table, column):
+    schema = client.get_table(f"{dataset}.{table}").schema
+    primary_keys = [field for field in schema if field.mode == 'REQUIRED']
+    return column in [field.name for field in primary_keys]
+
+def is_primary_key(client, dataset, table, column):
+    # Check for uniqueness
+    sql_query = f"SELECT COUNT(*) as total_rows, COUNT(DISTINCT {column}) as unique_values FROM `{dataset}.{table}`"
+    result = client.query(sql_query).to_dataframe()
+    return result['total_rows'][0] == result['unique_values'][0]
 
 
-def validate_table_relationships(relationship_csv, output_csv,target_client):
-    with open(relationship_csv, 'r') as csvfile:
-        relationship_reader = csv.DictReader(csvfile)
-        for row in relationship_reader:
-            validation_result = validate_relationship(row['Parent_Table'], row['Child_Table'],row['Parent_Dataset'], row['Child_Dataset'], row['Primary_Key'],
-                                                      row['Foreign_Key'],target_client)
+def validate_foreign_key(client, parent_dataset, parent_table, parent_key, child_dataset, child_table, foreign_key):
+    sql_query = f"SELECT DISTINCT {parent_key} FROM `{parent_dataset}.{parent_table}`"
+    parent_key_vals = client.query(sql_query).to_dataframe()[parent_key].tolist()
 
-            if validation_result:
-                logger.info("Generating output to file name: %s", output_csv.lower())
-                with open(output_csv, 'a', newline='') as result_file:
-                    csv_writer = csv.writer(result_file)
-                    csv_writer.writerow(['Table_Relationship', 'Key_Validation'] + validation_result)
+    sql_query = f"SELECT DISTINCT {foreign_key} FROM `{child_dataset}.{child_table}`"
+    child_key_vals_df = client.query(sql_query).to_dataframe()
+    child_key_vals = child_key_vals_df[foreign_key].tolist()
 
-# Call the function with your CSV file paths
-#validate_table_relationships('table_relationships.csv', 'validation_results.csv')
+    is_valid = set(child_key_vals).issubset(parent_key_vals)
+
+    violating_values = child_key_vals_df[~child_key_vals_df[foreign_key].isin(parent_key_vals)][foreign_key].tolist() if not is_valid else []
+
+    return is_valid, violating_values
+
+def generate_validation_output(client, relation_info):
+    output_data = []
+    for idx, row in relation_info.iterrows():
+        record = row.to_dict()
+
+        record['Primary_Key_Validation'] = is_primary_key(client, row['Parent_Dataset'], row['Parent_Table'], row['Primary_Key'])
+
+        foreign_key_validation, violating_values = validate_foreign_key(
+            client,
+            row['Parent_Dataset'], row['Parent_Table'], row['Primary_Key'],
+            row['Child_Dataset'], row['Child_Table'], row['Foreign_Key'])
+        record['Foreign_Key_Validation'] = foreign_key_validation
+        record['Violating_Child_Values'] = ','.join(map(str, violating_values)) if violating_values else ''
+
+        output_data.append(record)
+
+    return pd.DataFrame(output_data)
 # Function to validate source and target tables based on input configurations
 def validate_tables(row,source_cursor,target_client):
     # Extract table pair and validation configurations from the row
@@ -244,7 +259,11 @@ def main():
             validate_tables(row,source_cursor,target_client)
         except Exception as e:
             log_error(f"Error validating tables: {e}")
-    validate_table_relationships('config/table_relationships.csv', 'validation_results.csv',target_client)
+
+    relation_info = load_csv_data('config/relation_info.csv')
+    output_df = generate_validation_output(target_client, relation_info)
+    output_df.to_csv('pk_fkey_validation_result.csv', index=False)
+
 
 if __name__ == "__main__":
     main()

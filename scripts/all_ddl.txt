@@ -1,0 +1,30 @@
+DROP TABLE IF EXISTS dataset1.orders;
+DROP TABLE IF EXISTS dataset1.order_items;
+DROP TABLE IF EXISTS dataset1.shipments;
+DROP TABLE IF EXISTS dataset1.customers;
+
+CREATE TABLE dataset1.orders (
+    order_id INT64 NOT NULL,
+    customer_id INT64,
+    order_date DATE,
+    order_amount FLOAT64
+);
+CREATE TABLE dataset1.order_items (
+    order_id INT64 NOT NULL,
+    product_id INT64,
+    quantity INT64,
+    item_price FLOAT64
+);
+CREATE TABLE dataset1.shipments (
+    shipment_id INT64 NOT NULL,
+    order_id INT64 NOT NULL,
+    shipment_date DATE,
+    shipment_address STRING
+);
+
+CREATE TABLE dataset1.customers (
+    customer_id INT64 NOT NULL,
+    customer_name STRING,
+    customer_email STRING,
+    customer_phone STRING
+);
