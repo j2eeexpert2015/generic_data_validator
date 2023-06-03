@@ -95,12 +95,12 @@ def get_target_column_data(table_name):
         log_error(f"Error fetching target column data for table '{table_name}': {e}")
         raise
 
-def validate_relationship(parent_table, child_table, primary_key, foreign_key):
-    dataset_id = target_client.dataset_id
+def validate_relationship(parent_table, child_table, parent_dataset, child_dataset,primary_key, foreign_key):
+    dataset_id = 'dataset'
     check_query = f"""
         SELECT COUNT(*)
-        FROM `{dataset_id}.{child_table}`
-        WHERE {foreign_key} NOT IN (SELECT {primary_key} FROM `{dataset_id}.{parent_table}`)
+        FROM `{child_dataset}.{child_table}`
+        WHERE {foreign_key} NOT IN (SELECT {primary_key} FROM `{parent_dataset}.{parent_table}`)
     """
     check_query_job = target_client.query(check_query)
     # Get the result
@@ -115,7 +115,7 @@ def validate_table_relationships(relationship_csv, output_csv):
     with open(relationship_csv, 'r') as csvfile:
         relationship_reader = csv.DictReader(csvfile)
         for row in relationship_reader:
-            validation_result = validate_relationship(row['Parent_Table'], row['Child_Table'], row['Primary_Key'],
+            validation_result = validate_relationship(row['Parent_Table'], row['Child_Table'],row['Parent_Dataset'], row['Child_Dataset'], row['Primary_Key'],
                                                       row['Foreign_Key'])
 
             if validation_result:
@@ -223,10 +223,14 @@ def validate_tables(row):
     output_df.to_csv(output_filename, index=False)
 
 # Run validations
+#"""
 for _, row in table_pairs.iterrows():
     try:
         validate_tables(row)
     except Exception as e:
         log_error(f"Error validating tables: {e}")
+#"""
+# Call the function with your CSV file paths
+#validate_table_relationships('config/table_relationships.csv', 'validation_results.csv')
 
 
