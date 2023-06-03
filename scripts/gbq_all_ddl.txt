@@ -28,3 +28,12 @@ CREATE TABLE dataset1.customers (
     customer_email STRING,
     customer_phone STRING
 );
+
+CREATE TABLE dataset1.employee (
+    id INT64 NOT NULL,
+    first_name STRING,
+    last_name STRING,
+    age INT64,
+    salary NUMERIC
+);
+

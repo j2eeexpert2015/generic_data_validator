@@ -26,3 +26,9 @@ INSERT INTO dataset1.customers (customer_id, customer_name, customer_email, cust
     (102, 'Jane Doe', 'jane.doe@example.com', '098-765-4321'),
     (103, 'Bob Smith', 'bob.smith@example.com', '555-555-5555'),
     (104, 'Alice Johnson', 'alice.johnson@example.com', '444-444-4444');
+
+
+INSERT INTO dataset1.employee (id, first_name, last_name, age, salary) VALUES
+    (1, 'John', 'Doe', 30, 5000.00),
+    (2, 'Jane', 'Doe', 28, 5500.00),
+    (3, 'Bob', 'Smith', 35, 6000.00);

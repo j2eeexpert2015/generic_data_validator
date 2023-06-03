@@ -1,0 +1,15 @@
+INSERT INTO sys.employee
+(id, first_name, last_name, age, salary)
+VALUES(1, 'John', 'Doe', 30, 50000.00);
+INSERT INTO sys.employee
+(id, first_name, last_name, age, salary)
+VALUES(2, 'Jane', 'Smith', 28, 55000.00);
+INSERT INTO sys.employee
+(id, first_name, last_name, age, salary)
+VALUES(3, 'Michael', 'Brown', 35, 60000.00);
+INSERT INTO sys.employee
+(id, first_name, last_name, age, salary)
+VALUES(4, 'Alice', 'Johnson', 32, 62000.00);
+INSERT INTO sys.employee
+(id, first_name, last_name, age, salary)
+VALUES(5, 'David', 'Williams', 40, 70000.00);
